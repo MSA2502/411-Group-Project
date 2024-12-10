@@ -61,59 +61,10 @@ def db_check() -> Response:
 
 ##########################################################
 #
-# Meals
+# Locations
 #
 ##########################################################
 
-
-@app.route('/api/create-meal', methods=['POST'])
-def add_meal() -> Response:
-    """
-    Route to add a new meal to the database.
-
-    Expected JSON Input:
-        - meal (str): The name of the combatant (meal).
-        - cuisine (str): The cuisine type of the combatant (e.g., Italian, Chinese).
-        - price (float): The price of the combatant.
-        - difficulty (str): The preparation difficulty (HIGH, MED, LOW).
-
-    Returns:
-        JSON response indicating the success of the combatant addition.
-    Raises:
-        400 error if input validation fails.
-        500 error if there is an issue adding the combatant to the database.
-    """
-    app.logger.info('Creating new meal')
-    try:
-        # Get the JSON data from the request
-        data = request.get_json()
-
-        # Extract and validate required fields
-        meal = data.get('meal')
-        cuisine = data.get('cuisine')
-        price = data.get('price')
-        difficulty = data.get('difficulty')
-
-        if not meal or not cuisine or price is None or difficulty not in ['HIGH', 'MED', 'LOW']:
-            return make_response(jsonify({'error': 'Invalid input, all fields are required with valid values'}), 400)
-
-        # Check that price is a float and has at most two decimal places
-        try:
-            price = float(price)
-            if round(price, 2) != price:
-                raise ValueError("Price has more than two decimal places")
-        except ValueError as e:
-            return make_response(jsonify({'error': 'Price must be a valid float with at most two decimal places'}), 400)
-
-        # Call the kitchen_model function to add the combatant to the database
-        app.logger.info('Adding meal: %s, %s, %.2f, %s', meal, cuisine, price, difficulty)
-        kitchen_model.create_meal(meal, cuisine, price, difficulty)
-
-        app.logger.info("Combatant added: %s", meal)
-        return make_response(jsonify({'status': 'success', 'combatant': meal}), 201)
-    except Exception as e:
-        app.logger.error("Failed to add combatant: %s", str(e))
-        return make_response(jsonify({'error': str(e)}), 500)
 
 @app.route('/api/clear-locations', methods=['DELETE'])
 def clear_catalog() -> Response:
@@ -131,7 +82,7 @@ def clear_catalog() -> Response:
         app.logger.error(f"Error clearing locations: {e}")
         return make_response(jsonify({'error': str(e)}), 500)
 
-@app.route('/api/delete-locations/<int:location_id>', methods=['DELETE'])
+@app.route('/api/delete-location/<int:location_id>', methods=['DELETE'])
 def delete_meal(location_id: int) -> Response:
     """
     Route to delete a location by its ID. This performs a soft delete by marking it as deleted.
@@ -154,7 +105,7 @@ def delete_meal(location_id: int) -> Response:
 @app.route('/api/get-location-by-id/<int:location_id>', methods=['GET'])
 def get_meal_by_id(location_id: int) -> Response:
     """
-    Route to get a meal by its ID.
+    Route to get a location by its ID.
 
     Path Parameter:
         - location_id (int): The ID of the location.
@@ -204,137 +155,6 @@ def get_meal_by_name(meal_name: str) -> Response:
     except Exception as e:
         app.logger.error(f"Error retrieving forecast for favorites: {e}")
         return make_response(jsonify({'error': str(e)}), 500)
-
-
-############################################################
-#
-# Battle
-#
-############################################################
-
-
-@app.route('/api/battle', methods=['GET'])
-def battle() -> Response:
-    """
-    Route to initiate a battle between the two currently prepared meals.
-
-    Returns:
-        JSON response indicating the result of the battle and the winner.
-    Raises:
-        500 error if there is an issue during the battle.
-    """
-    try:
-        app.logger.info('Two meals enter, one meal leaves!')
-
-        winner = battle_model.battle()
-
-        return make_response(jsonify({'status': 'success', 'winner': winner}), 200)
-    except Exception as e:
-        app.logger.error(f"Battle error: {e}")
-        return make_response(jsonify({'error': str(e)}), 500)
-
-@app.route('/api/clear-combatants', methods=['POST'])
-def clear_combatants() -> Response:
-    """
-    Route to clear the list of combatants for the battle.
-
-    Returns:
-        JSON response indicating success of the operation.
-    Raises:
-        500 error if there is an issue clearing combatants.
-    """
-    try:
-        app.logger.info('Clearing all combatants...')
-        battle_model.clear_combatants()
-        app.logger.info('Combatants cleared.')
-        return make_response(jsonify({'status': 'success'}), 200)
-    except Exception as e:
-        app.logger.error("Failed to clear combatants: %s", str(e))
-        return make_response(jsonify({'error': str(e)}), 500)
-
-@app.route('/api/get-combatants', methods=['GET'])
-def get_combatants() -> Response:
-    """
-    Route to get the list of combatants for the battle.
-
-    Returns:
-        JSON response with the list of combatants.
-    """
-    try:
-        app.logger.info('Getting combatants...')
-        combatants = battle_model.get_combatants()
-        return make_response(jsonify({'status': 'success', 'combatants': combatants}), 200)
-    except Exception as e:
-        app.logger.error("Failed to get combatants: %s", str(e))
-        return make_response(jsonify({'error': str(e)}), 500)
-
-@app.route('/api/prep-combatant', methods=['POST'])
-def prep_combatant() -> Response:
-    """
-    Route to prepare a prep a meal making it a combatant for a battle.
-
-    Parameters:
-        - meal (str): The name of the meal
-
-    Returns:
-        JSON response indicating the success of combatant preparation.
-    Raises:
-        500 error if there is an issue preparing combatants.
-    """
-    try:
-        data = request.json
-        meal = data.get('meal')
-        app.logger.info("Preparing combatant: %s", meal)
-
-        if not meal:
-            return make_response(jsonify({'error': 'You must name a combatant'}), 400)
-
-        try:
-            meal = kitchen_model.get_meal_by_name(meal)
-            battle_model.prep_combatant(meal)
-            combatants = battle_model.get_combatants()
-        except Exception as e:
-            app.logger.error("Failed to prepare combatant: %s", str(e))
-            return make_response(jsonify({'error': str(e)}), 500)
-        return make_response(jsonify({'status': 'success', 'combatants': combatants}), 200)
-
-    except Exception as e:
-        app.logger.error("Failed to prepare combatants: %s", str(e))
-        return make_response(jsonify({'error': str(e)}), 500)
-
-
-############################################################
-#
-# Leaderboard
-#
-############################################################
-
-
-@app.route('/api/leaderboard', methods=['GET'])
-def get_leaderboard() -> Response:
-    """
-    Route to get the leaderboard of meals sorted by wins, battles, or win percentage.
-
-    Query Parameters:
-        - sort (str): The field to sort by ('wins', 'battles', or 'win_pct'). Default is 'wins'.
-
-    Returns:
-        JSON response with a sorted leaderboard of meals.
-    Raises:
-        500 error if there is an issue generating the leaderboard.
-    """
-    try:
-        sort_by = request.args.get('sort', 'wins')  # Default sort by wins
-        app.logger.info("Generating leaderboard sorted by %s", sort_by)
-
-        leaderboard_data = kitchen_model.get_leaderboard(sort_by)
-
-        return make_response(jsonify({'status': 'success', 'leaderboard': leaderboard_data}), 200)
-    except Exception as e:
-        app.logger.error(f"Error generating leaderboard: {e}")
-        return make_response(jsonify({'error': str(e)}), 500)
-
-
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
