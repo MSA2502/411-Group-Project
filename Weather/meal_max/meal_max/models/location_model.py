@@ -62,7 +62,7 @@ def create_location(location: str, favorite: bool, current_weather: str, forecas
         with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                INSERT INTO locations(location, weather, favorite, current_weather, forecasted_weather)
+                INSERT INTO locations(location, favorite, current_weather, forecasted_weather)
                 VALUES (?, ?, ?, ?)
             """, (location, favorite, current_weather, forecasted_weather))
             conn.commit()
@@ -400,6 +400,73 @@ def get_favorites(sort_by: str="favorites") -> dict[str, Any]:
 
         logger.info("Leaderboard retrieved successfully")
         return leaderboard
+
+    except sqlite3.Error as e:
+        logger.error("Database error: %s", str(e))
+        raise e
+
+
+def get_meal_by_id(location_id: int) -> Location:
+    """
+    Gets a location by its id
+    
+    Args:
+        location_id(int): unique identifier of a location object
+    
+    Returns:
+        Location object
+    
+    Raises:
+        sqlite3.Error: If any database error occurs.
+        ValueError: if meal with meal_id can not be found or has been deleted
+    """
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT id, meal, cuisine, price, difficulty, deleted FROM meals WHERE id = ?", (meal_id,))
+            row = cursor.fetchone()
+
+            if row:
+                if row[5]:
+                    logger.info("Meal with ID %s has been deleted", location_id)
+                    raise ValueError(f"Meal with ID {location_id} has been deleted")
+                return Location(id=row[0], meal=row[1], cuisine=row[2], price=row[3], difficulty=row[4])
+            else:
+                logger.info("Meal with ID %s not found", location_id)
+                raise ValueError(f"Meal with ID {location_id} not found")
+
+    except sqlite3.Error as e:
+        logger.error("Database error: %s", str(e))
+        raise e
+
+def get_meal_by_name(meal_name: str) -> Meal:
+    """
+    Gets a meal by its name
+    
+    Args:
+        meal_name(str): the name of a meal
+    
+    Returns:
+        returns a Meal object
+    
+    Raises:
+        sqlite3.Error: If any database error occurs.
+        ValueError: if meal with meal_name is not found or has been deleted
+    """
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT id, meal, cuisine, price, difficulty, deleted FROM meals WHERE meal = ?", (meal_name,))
+            row = cursor.fetchone()
+
+            if row:
+                if row[5]:
+                    logger.info("Meal with name %s has been deleted", meal_name)
+                    raise ValueError(f"Meal with name {meal_name} has been deleted")
+                return Location(id=row[0], location=row[1], favorite=row[2], weather=row[3], forecast=row[4])
+            else:
+                logger.info("Meal with name %s not found", meal_name)
+                raise ValueError(f"Meal with name {meal_name} not found")
 
     except sqlite3.Error as e:
         logger.error("Database error: %s", str(e))

@@ -34,10 +34,10 @@ def test_create_location(mock_get_db_connection):
     create_location("Boston")
     mock_cursor.execute.assert_called_once_with(
         """
-        INSERT INTO location (location)
+        INSERT INTO location ((location, favorite, current_weather, forecasted_weather))
         VALUES (?, ?, ?, ?)
         """,
-        ("Boston"),
+        ("Boston, True, Mist, Sunny"),
     )
 
 @patch("meal_max.utils.sql_utils.get_db_connection", return_value=MagicMock())
