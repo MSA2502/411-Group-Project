@@ -196,7 +196,7 @@ def add_meal() -> Response:
         users.create_user(username, password)
 
         app.logger.info("User added: %s", username)
-        return make_response(jsonify({'status': 'success', 'user': username}), 201)
+        return make_response(jsonify({'status': 'success', 'message': 'Account created successfully'}), 201)
     except Exception as e:
         app.logger.error("Failed to add user: %s", str(e))
         return make_response(jsonify({'error': str(e)}), 500)
@@ -235,7 +235,7 @@ def add_meal() -> Response:
         users.update_password(username, password)
 
         app.logger.info("Updated password for user: %s", username)
-        return make_response(jsonify({'status': 'success', 'user': username}), 201)
+        return make_response(jsonify({'status': 'success', 'message': 'Password updated successfully'}), 201)
     except Exception as e:
         app.logger.error("Failed to update password for user: %s", str(e))
         return make_response(jsonify({'error': str(e)}), 500)
