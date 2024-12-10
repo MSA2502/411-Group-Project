@@ -1,6 +1,6 @@
 import logging
 from typing import List
-from meal_max.models.location_model import Location, update_meal_stats
+from meal_max.models.location_model import Location
 from meal_max.utils.logger import configure_logger
 
 logger = logging.getLogger(__name__)
