@@ -2,8 +2,8 @@ from dotenv import load_dotenv
 from flask import Flask, jsonify, make_response, Response, request
 # from flask_cors import CORS
 
-from meal_max.models import kitchen_model
-from meal_max.models.battle_model import BattleModel
+from meal_max.models import location_model
+from meal_max.models.user_models import Users
 from meal_max.utils.sql_utils import check_database_connection, check_table_exists
 
 
@@ -17,7 +17,7 @@ app = Flask(__name__)
 # CORS(app)
 
 # Initialize the BattleModel
-battle_model = BattleModel()
+Users = Users()
 
 ####################################################
 #
@@ -51,9 +51,9 @@ def db_check() -> Response:
         app.logger.info("Checking database connection...")
         check_database_connection()
         app.logger.info("Database connection is OK.")
-        app.logger.info("Checking if meals table exists...")
-        check_table_exists("meals")
-        app.logger.info("meals table exists.")
+        app.logger.info("Checking if locations table exists...")
+        check_table_exists("locations")
+        app.logger.info("locations table exists.")
         return make_response(jsonify({'database_status': 'healthy'}), 200)
     except Exception as e:
         return make_response(jsonify({'error': str(e)}), 404)
@@ -115,83 +115,94 @@ def add_meal() -> Response:
         app.logger.error("Failed to add combatant: %s", str(e))
         return make_response(jsonify({'error': str(e)}), 500)
 
-@app.route('/api/clear-meals', methods=['DELETE'])
+@app.route('/api/clear-locations', methods=['DELETE'])
 def clear_catalog() -> Response:
     """
-    Route to clear all meals (recreates the table).
+    Route to clear all locations (recreates the table).
 
     Returns:
         JSON response indicating success of the operation or error message.
     """
     try:
-        app.logger.info("Clearing the meals")
-        kitchen_model.clear_meals()
+        app.logger.info("Clearing the locations")
+        location_model.clear_locations()
         return make_response(jsonify({'status': 'success'}), 200)
     except Exception as e:
-        app.logger.error(f"Error clearing catalog: {e}")
+        app.logger.error(f"Error clearing locations: {e}")
         return make_response(jsonify({'error': str(e)}), 500)
 
-@app.route('/api/delete-meal/<int:meal_id>', methods=['DELETE'])
-def delete_meal(meal_id: int) -> Response:
+@app.route('/api/delete-locations/<int:location_id>', methods=['DELETE'])
+def delete_meal(location_id: int) -> Response:
     """
-    Route to delete a meal by its ID. This performs a soft delete by marking it as deleted.
+    Route to delete a location by its ID. This performs a soft delete by marking it as deleted.
 
     Path Parameter:
-        - meal_id (int): The ID of the meal to delete.
+        - location_id (int): The ID of the location to delete.
 
     Returns:
         JSON response indicating success of the operation or error message.
     """
     try:
-        app.logger.info(f"Deleting meal by ID: {meal_id}")
+        app.logger.info(f"Deleting meal by ID: {location_id}")
 
-        kitchen_model.delete_meal(meal_id)
+        location_model.delete_location(location_id)
         return make_response(jsonify({'status': 'success'}), 200)
     except Exception as e:
-        app.logger.error(f"Error deleting meal: {e}")
+        app.logger.error(f"Error deleting location: {e}")
         return make_response(jsonify({'error': str(e)}), 500)
 
-@app.route('/api/get-meal-by-id/<int:meal_id>', methods=['GET'])
-def get_meal_by_id(meal_id: int) -> Response:
+@app.route('/api/get-location-by-id/<int:location_id>', methods=['GET'])
+def get_meal_by_id(location_id: int) -> Response:
     """
     Route to get a meal by its ID.
 
     Path Parameter:
-        - meal_id (int): The ID of the meal.
+        - location_id (int): The ID of the location.
 
     Returns:
-        JSON response with the meal details or error message.
+        JSON response with the location details or error message.
     """
     try:
-        app.logger.info(f"Retrieving meal by ID: {meal_id}")
+        app.logger.info(f"Retrieving meal by ID: {location_id}")
 
-        meal = kitchen_model.get_meal_by_id(meal_id)
-        return make_response(jsonify({'status': 'success', 'meal': meal}), 200)
+        location = location_model.get_location_by_id(location_id)
+        return make_response(jsonify({'status': 'success', 'location': location}), 200)
     except Exception as e:
         app.logger.error(f"Error retrieving meal by ID: {e}")
         return make_response(jsonify({'error': str(e)}), 500)
 
-@app.route('/api/get-meal-by-name/<string:meal_name>', methods=['GET'])
+@app.route('/api/get-favorites-weather', methods=['GET'])
 def get_meal_by_name(meal_name: str) -> Response:
     """
-    Route to get a meal by its name.
-
-    Path Parameter:
-        - meal_name (str): The name of the meal.
+    Route to get a weather for all favorite locations
 
     Returns:
-        JSON response with the meal details or error message.
+        JSON response with the weather details or error message.
     """
     try:
-        app.logger.info(f"Retrieving meal by name: {meal_name}")
+        app.logger.info(f"Retrieving weather of all favorite locatinos")
 
-        if not meal_name:
-            return make_response(jsonify({'error': 'Meal name is required'}), 400)
-
-        meal = kitchen_model.get_meal_by_name(meal_name)
-        return make_response(jsonify({'status': 'success', 'meal': meal}), 200)
+        weather = location_model.get_weather_for_favorite_locations()
+        return make_response(jsonify({'status': 'success', 'weather': weather}), 200)
     except Exception as e:
-        app.logger.error(f"Error retrieving meal by name: {e}")
+        app.logger.error(f"Error retrieving weather for favorites: {e}")
+        return make_response(jsonify({'error': str(e)}), 500)
+    
+@app.route('/api/get-favorites-forcast', methods=['GET'])
+def get_meal_by_name(meal_name: str) -> Response:
+    """
+    Route to get a forecast for all favorite locations
+
+    Returns:
+        JSON response with the forecast details or error message.
+    """
+    try:
+        app.logger.info(f"Retrieving forecast of all favorite locatinos")
+
+        forecast = location_model.get_forecast_for_favorite_location()
+        return make_response(jsonify({'status': 'success', 'forecast': forecast}), 200)
+    except Exception as e:
+        app.logger.error(f"Error retrieving forecast for favorites: {e}")
         return make_response(jsonify({'error': str(e)}), 500)
 
 
