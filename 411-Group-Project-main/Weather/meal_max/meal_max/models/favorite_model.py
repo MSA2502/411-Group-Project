@@ -36,7 +36,7 @@ class FavoriteModel:
             ValueError: If the meal is already in the favorites list.
         """
         if location in self.favorites:
-            logger.error("Attempted to add '%s' to favorites, but it is already in the list.", meal.meal)
+            logger.error("Attempted to add '%s' to favorites, but it is already in the list.", location.location)
             raise ValueError("This meal is already in your favorites list.")
 
         # Log the addition of the meal to favorites
@@ -57,7 +57,7 @@ class FavoriteModel:
             ValueError: If the meal is not found in the favorites list.
         """
         if location not in self.favorites:
-            logger.error("Attempted to remove '%s' from favorites, but it is not in the list.", meal.meal)
+            logger.error("Attempted to remove '%s' from favorites, but it is not in the list.", location.location)
             raise ValueError("This meal is not in your favorites list.")
 
         # Log the removal of the meal from favorites
