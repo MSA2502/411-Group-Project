@@ -169,40 +169,6 @@ def get_weather_for_favorite_location(location: str) -> dict:
     }
 
 
-def add_location_to_favorite(self, location: Location) -> None:
-        """
-        Adds a song to the playlist.
-
-        Args:
-            song (Song): the song to add to the playlist.
-
-        Raises:
-            TypeError: If the song is not a valid Song instance.
-            ValueError: If a song with the same 'id' already exists.
-        """
-        logger.info("Adding new song to playlist")
-        if not isinstance(location, Location):
-            logger.error("Song is not a valid song")
-            raise TypeError("Song is not a valid song")
-
-        location_id = self.validate_location_id(location.id, check_in_playlist=False)
-        if location_id in [song_in_playlist.id for song_in_playlist in self.favorite]:
-            logger.error("Song with ID %d already exists in the playlist", location_id)
-            raise ValueError(f"Song with ID {location.id} already exists in the playlist")
-
-        self.favorite.append(Location)
-
-
-
-def get_all_favorites(self) -> List[Location]:
-        """
-        Returns a list of all favorite locations 
-        """
-        self.check_if_empty()
-        logger.info("Getting all favorties in locations")
-        return self.favorties
-
-
 def view_all_favorites_with_current_weather(weather: str) -> None:
     """
     Recreates the favorites table, effectively deleting all locations.
@@ -298,7 +264,6 @@ def get_forecast_for_favorite_location(location: str):
     if not api_key:
         raise ValueError("API key not found in environment variables.")
 
-    #weather_url = "https://api.openweathermap.org/data/2.5/weather"
     forecast_url = "https://api.openweathermap.org/data/2.5/forecast"
 
     params = {
@@ -308,20 +273,6 @@ def get_forecast_for_favorite_location(location: str):
     }
 
     try:
-        # Get current weather
-        """
-        
-        current_response = requests.get(weather_url, params=params)
-        if current_response.status_code != 200:
-            raise Exception(f"Failed to fetch current weather: {current_response.status_code}, {current_response.text}")
-
-        current_data = current_response.json()
-        current_weather = (
-            f"{current_data['weather'][0]['main']} ({current_data['weather'][0]['description']}), "
-            f"Temp: {current_data['main']['temp']}°C, Humidity: {current_data['main']['humidity']}%, "
-            f"Wind: {current_data['wind']['speed']} m/s"
-        )
-        """
         # Get forecasted weather
         forecast_response = requests.get(forecast_url, params=params)
         if forecast_response.status_code != 200:
@@ -351,56 +302,70 @@ def get_forecast_for_favorite_location(location: str):
         raise
 
     
-def get_favorites(sort_by: str="favorites") -> dict[str, Any]:
+def get_location_by_id(location_id: int) -> Location:
     """
-    Gets the leaderboard of combatants sorted by either wins or win_pct
+    Gets a meal by its id
     
     Args:
-        sort_by(str): sorts combatants by number of wins or by win_pct
+        meal_id(int): unique identifier of a meal object
     
     Returns:
-        returns a dictionary containing the combatant's meal_id, meal, cuisine, price, difficulty, battles, wins, and win_pct 
+        Location object
     
     Raises:
         sqlite3.Error: If any database error occurs.
-        ValueError: if an invalid paramter is entered into sort_by
+        ValueError: if meal with meal_id can not be found or has been deleted
     """
-    query = """
-        SELECT id, meal, cuisine, price, difficulty, battles, wins, (wins * 1.0 / battles) AS win_pct
-        FROM meals WHERE deleted = false AND battles > 0
-    """
-
-    if sort_by == "win_pct":
-        query += " ORDER BY win_pct DESC"
-    elif sort_by == "wins":
-        query += " ORDER BY wins DESC"
-    else:
-        logger.error("Invalid sort_by parameter: %s", sort_by)
-        raise ValueError("Invalid sort_by parameter: %s" % sort_by)
-
     try:
         with get_db_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute(query)
-            rows = cursor.fetchall()
+            cursor.execute("SELECT id, location, favorite, weather, forecast, deleted FROM location WHERE id = ?", (location_id,))
+            row = cursor.fetchone()
 
-        leaderboard = []
-        for row in rows:
-            meal = {
-                'id': row[0],
-                'meal': row[1],
-                'cuisine': row[2],
-                'price': row[3],
-                'difficulty': row[4],
-                'battles': row[5],
-                'wins': row[6],
-                'win_pct': round(row[7] * 100, 1)  # Convert to percentage
-            }
-            leaderboard.append(meal)
-
-        logger.info("Leaderboard retrieved successfully")
-        return leaderboard
+            if row:
+                if row[5]:
+                    logger.info("Location with ID %s has been deleted", location_id)
+                    raise ValueError(f"Location with ID {location_id} has been deleted")
+                return Location(id=row[0], location=row[1], favorite=row[2], weather=row[3], forecast=row[4])
+            else:
+                logger.info("Meal with ID %s not found", location_id)
+                raise ValueError(f"Location with ID {location_id} not found")
 
     except sqlite3.Error as e:
         logger.error("Database error: %s", str(e))
         raise e
+
+def get_location_by_name(location_name: str) -> Location:
+    """
+    Gets a location by its name
+    
+    Args:
+        location_name(str): the name of a location
+    
+    Returns:
+        returns a Location object
+    
+    Raises:
+        sqlite3.Error: If any database error occurs.
+        ValueError: if location with location_name is not found or has been deleted
+    """
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT id, location, favorite, weather, forecast, deleted FROM location WHERE id = ?", (location_name,))
+            row = cursor.fetchone()
+
+            if row:
+                if row[5]:
+                    logger.info("Location with name %s has been deleted", location_name)
+                    raise ValueError(f"Location with name {location_name} has been deleted")
+                return Location(id=row[0], locations=row[1], cuisine=row[2], price=row[3], difficulty=row[4])
+            else:
+                logger.info("Location with name %s not found", location_name)
+                raise ValueError(f"Location with name {location_name} not found")
+
+    except sqlite3.Error as e:
+        logger.error("Database error: %s", str(e))
+        raise e
+
+
