@@ -1,9 +1,0 @@
-DROP TABLE IF EXISTS locations;
-CREATE TABLE locations (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    locations TEXT NOT NULL UNIQUE,
-    favorite BOOLEAN DEFAULT FALSE
-    weather TEXT NOT NULL,
-    forecast TEXT NOT NULL,
-    deleted BOOLEAN DEFAULT FALSE
-);
