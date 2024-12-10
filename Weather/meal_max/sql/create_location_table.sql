@@ -2,7 +2,7 @@ DROP TABLE IF EXISTS locations;
 CREATE TABLE locations (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     locations TEXT NOT NULL UNIQUE,
-    favorite BOOLEAN DEFAULT FALSE,
+    favorite BOOLEAN DEFAULT TRUE,
     weather TEXT NOT NULL,
     forecast TEXT NOT NULL,
     deleted BOOLEAN DEFAULT FALSE
