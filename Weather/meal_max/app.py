@@ -16,8 +16,8 @@ app = Flask(__name__)
 # uncomment this
 # CORS(app)
 
-# Initialize the BattleModel
-Users = Users()
+# Initialize the UsersModel
+users = Users()
 
 ####################################################
 #
@@ -123,7 +123,7 @@ def get_meal_by_id(location_id: int) -> Response:
         return make_response(jsonify({'error': str(e)}), 500)
 
 @app.route('/api/get-favorites-weather', methods=['GET'])
-def get_meal_by_name(meal_name: str) -> Response:
+def get_meal_by_name() -> Response:
     """
     Route to get a weather for all favorite locations
 
@@ -140,7 +140,7 @@ def get_meal_by_name(meal_name: str) -> Response:
         return make_response(jsonify({'error': str(e)}), 500)
     
 @app.route('/api/get-favorites-forcast', methods=['GET'])
-def get_meal_by_name(meal_name: str) -> Response:
+def get_meal_by_name() -> Response:
     """
     Route to get a forecast for all favorite locations
 
@@ -154,6 +154,90 @@ def get_meal_by_name(meal_name: str) -> Response:
         return make_response(jsonify({'status': 'success', 'forecast': forecast}), 200)
     except Exception as e:
         app.logger.error(f"Error retrieving forecast for favorites: {e}")
+        return make_response(jsonify({'error': str(e)}), 500)
+    
+##########################################################
+#
+# Users
+#
+##########################################################
+
+@app.route('/api/create-user', methods=['POST'])
+def add_meal() -> Response:
+    """
+    Route to add a new user
+
+    Expected JSON Input:
+        - username (str): The username.
+        - password (str): The password.
+
+    Returns:
+        JSON response indicating the success of the user addition.
+    Raises:
+        400 error if input validation fails.
+        500 error if there is an issue adding the user to the database.
+    """
+    app.logger.info('Creating new user')
+    try:
+        # Get the JSON data from the request
+        data = request.get_json()
+
+        # Extract and validate required fields
+        username = data.get('username')
+        password = data.get('password')
+
+        if not username or not password:
+            return make_response(jsonify({'error': 'Invalid input, all fields are required with valid values'}), 400)
+
+        # Check that price is a float and has at most two decimal places
+
+        # Call the kitchen_model function to add the combatant to the database
+        app.logger.info('Adding user: %s', username)
+        users.create_user(username, password)
+
+        app.logger.info("User added: %s", username)
+        return make_response(jsonify({'status': 'success', 'user': username}), 201)
+    except Exception as e:
+        app.logger.error("Failed to add user: %s", str(e))
+        return make_response(jsonify({'error': str(e)}), 500)
+    
+@app.route('/api/create-user', methods=['POST'])
+def add_meal() -> Response:
+    """
+    Route to update the password for a user
+
+    Expected JSON Input:
+        - username (str): The username.
+        - password (str): The password.
+
+    Returns:
+        JSON response indicating the success of the user addition.
+    Raises:
+        400 error if input validation fails.
+        500 error if there is an issue adding the user to the database.
+    """
+    app.logger.info('Creating new user')
+    try:
+        # Get the JSON data from the request
+        data = request.get_json()
+
+        # Extract and validate required fields
+        username = data.get('username')
+        password = data.get('password')
+
+        if not username or not password:
+            return make_response(jsonify({'error': 'Invalid input, all fields are required with valid values'}), 400)
+
+        # Check that price is a float and has at most two decimal places
+
+        # Call the kitchen_model function to add the combatant to the database
+        app.logger.info('Update password for user: %s', username)
+        users.update_password(username, password)
+
+        app.logger.info("Updated password for user: %s", username)
+        return make_response(jsonify({'status': 'success', 'user': username}), 201)
+    except Exception as e:
+        app.logger.error("Failed to update password for user: %s", str(e))
         return make_response(jsonify({'error': str(e)}), 500)
 
 if __name__ == '__main__':
