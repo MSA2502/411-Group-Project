@@ -77,15 +77,15 @@ create_meal() {
 }
 
 delete_meal() {
-  meal_id=$1
+  location_id=$1
 
-  echo "Deleting meal by ID ($meal_id)..."
-  response=$(curl -s -X DELETE "$BASE_URL/delete-meal/$meal_id")
+  echo "Deleting location by ID ($location_id)..."
+  response=$(curl -s -X DELETE "$BASE_URL/delete-locations/$location_id")
   #echo $?
   if echo "$response" | grep -q '"status": "success"'; then
-    echo "Meal deleted successfully by ID ($meal_id)."
+    echo "location deleted successfully by ID ($location_id)."
   else
-    echo "Failed to delete meal by ID ($meal_id)."
+    echo "Failed to delete meal by ID ($location_id)."
     exit 1
   fi
 }
@@ -106,27 +106,27 @@ get_combatants() {
 }
 
 get_meal_by_id() {
-  meal_id=$1
+  location_id=$1
 
-  echo "Getting meal by ID ($meal_id)..."
-  response=$(curl -s -X GET "$BASE_URL/get-meal-by-id/$meal_id")
+  echo "Getting meal by ID ($location_id)..."
+  response=$(curl -s -X GET "$BASE_URL/get-location-by-id/$location_id")
   if echo "$response" | grep -q '"status": "success"'; then
-    echo "Meal retrieved successfully by ID ($meal_id)."
+    echo "Meal retrieved successfully by ID ($location_id)."
     if [ "$ECHO_JSON" = true ]; then
-      echo "Meal JSON (ID $meal_id):"
+      echo "Location JSON (ID $location_id):"
       echo "$response" | jq .
     fi
   else
-    echo "Failed to get meal by ID ($meal_id)."
+    echo "Failed to get location by ID ($location_id)."
     exit 1
   fi
 }
 
 get_meal_by_name() {
-  meal_name=$1
+  location_name_name=$1
 
-  echo "Getting meal by name $meal_name"
-  response=$(curl -s -X GET "$BASE_URL/get-meal-by-name/$meal_name")
+  echo "Getting favorites weather by name $location_name"
+  response=$(curl -s -X GET "$BASE_URL/get-favorites-weather/$location_name")
   if echo "$response" | grep -q '"status": "success"'; then
     echo "Meal retrieved successfully by name."
     if [ "$ECHO_JSON" = true ]; then
@@ -134,7 +134,7 @@ get_meal_by_name() {
       echo "$response" | jq .
     fi
   else
-    echo "Failed to get meal by name."
+    echo "Failed to get location by name."
     exit 1
   fi
 }
@@ -146,14 +146,14 @@ get_meal_by_name() {
 #
 ############################################################
 
-clear_combatants() {
-  echo "Clearing combatatants..."
-  response=$(curl -s -X POST "$BASE_URL/clear-combatants")
+clear_catalog() {
+  echo "Clearing locations..."
+  response=$(curl -s -X POST "$BASE_URL/clear-locations")
 
   if echo "$response" | grep -q '"status": "success"'; then
-    echo "Combatants successfully."
+    echo "locations cleared successfully."
   else
-    echo "Failed to clear combatants."
+    echo "Failed to clear locations."
     exit 1
   fi
 }
