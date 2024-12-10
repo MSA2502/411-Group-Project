@@ -164,7 +164,7 @@ def get_weather_for_favorite_location(location: str) -> dict:
     }
 
 
-def get_weather_for_location(location: str):
+def get_weather_for_location(location: str) -> None:
     """
     Gets weather for a favorite location, including current and forecasted weather.
 
@@ -219,7 +219,7 @@ def get_weather_for_location(location: str):
         print(f"An error occurred while fetching weather data: {e}")
         raise
 
-def get_forecast_for_favorite_location(location: str):
+def get_forecast_for_favorite_location(location: str) -> None: 
     """
     Gets weather for a favorite location, including current and forecasted weather.
 
