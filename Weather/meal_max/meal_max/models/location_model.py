@@ -279,7 +279,76 @@ def get_weather_for_favorite_location(location: str):
         print(f"An error occurred while fetching weather data: {e}")
         raise
 
-    
+def get_forecast_for_favorite_location(location: str):
+    """
+    Gets weather for a favorite location, including current and forecasted weather.
+
+    Args:
+        location (str): Name of the location to fetch weather for.
+
+    Raises:
+        ValueError: If the location is invalid or not a string.
+        Exception: If the API call fails or data parsing encounters an error.
+    """
+    if not isinstance(location, str):
+        raise ValueError(f"Invalid location: {location}. Location must be a string.")
+
+    # Load API key and set base URLs
+    api_key = os.getenv(api_key)
+    if not api_key:
+        raise ValueError("API key not found in environment variables.")
+
+    #weather_url = "https://api.openweathermap.org/data/2.5/weather"
+    forecast_url = "https://api.openweathermap.org/data/2.5/forecast"
+
+    params = {
+        "q": location,
+        "appid": os.getenv(api_key),
+        "units": "metric"  # Metric units for temperature in Celsius
+    }
+
+    try:
+        # Get current weather
+        """
+        
+        current_response = requests.get(weather_url, params=params)
+        if current_response.status_code != 200:
+            raise Exception(f"Failed to fetch current weather: {current_response.status_code}, {current_response.text}")
+
+        current_data = current_response.json()
+        current_weather = (
+            f"{current_data['weather'][0]['main']} ({current_data['weather'][0]['description']}), "
+            f"Temp: {current_data['main']['temp']}°C, Humidity: {current_data['main']['humidity']}%, "
+            f"Wind: {current_data['wind']['speed']} m/s"
+        )
+        """
+        # Get forecasted weather
+        forecast_response = requests.get(forecast_url, params=params)
+        if forecast_response.status_code != 200:
+            raise Exception(f"Failed to fetch forecasted weather: {forecast_response.status_code}, {forecast_response.text}")
+
+        forecast_data = forecast_response.json()
+        forecasted_weather = "\n".join(
+            [
+                f"{item['dt_txt']}: {item['weather'][0]['description']}, Temp: {item['main']['temp']}°C"
+                for item in forecast_data['list'][:3]  # Fetching next three forecast entries (3-hour intervals)
+            ]
+        )
+
+        # Combine and write to JSON file
+        forecast_result = {
+            "location": location,
+            "forecasted_weather": forecasted_weather
+        }
+
+        with open("forecast_data.json", "w") as json_file:
+            json.dump(forecast_result, json_file, indent=4)
+
+        print("Weather data successfully written to 'forecast_data.json'")
+
+    except Exception as e:
+        print(f"An error occurred while fetching weather data: {e}")
+        raise
 
     
 def get_favorites(sort_by: str="favorites") -> dict[str, Any]:
