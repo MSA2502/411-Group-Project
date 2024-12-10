@@ -149,7 +149,7 @@ def get_weather_for_favorite_location(location: str) -> dict:
         ValueError: If the location is invalid.
         requests.RequestException: For API call issues.
     """
-    api_key = os.getenv("OPENWEATHER_API_KEY")
+    api_key = os.getenv("api_key")
     if not api_key:
         raise ValueError("API key is missing in the environment variables.")
     
@@ -239,7 +239,7 @@ def get_weather_for_favorite_location(location: str):
         raise ValueError(f"Invalid location: {location}. Location must be a string.")
 
     # Load API key and set base URLs
-    api_key = "f15da0700acdca33e7c7d3737553c68e"
+    api_key = os.getenv(api_key)
     if not api_key:
         raise ValueError("API key not found in environment variables.")
 
@@ -247,7 +247,7 @@ def get_weather_for_favorite_location(location: str):
 
     params = {
         "q": location,
-        "appid": "f15da0700acdca33e7c7d3737553c68e",
+        "appid": api_key,
         "units": "metric"  # Metric units for temperature in Celsius
     }
 
