@@ -49,12 +49,12 @@ check_db() {
 
 ##########################################################
 #
-# Meal Management
+# Location Management
 #
 ##########################################################
 
 clear_meals() {
-  echo "Clearing the meals..."
+  echo "Clearing the locations..."
   curl -s -X DELETE "$BASE_URL/clear-meals" | grep -q '"status": "success"'
 }
 
