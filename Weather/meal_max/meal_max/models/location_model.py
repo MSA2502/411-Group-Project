@@ -201,10 +201,6 @@ def get_weather_for_location(location_id:int) -> None:
     except sqlite3.Error as e:
         logger.error("Database error: %s", str(e))
         raise e
-
-
-
-
     
 def get_location_by_id(location_id: int) -> None:
     """
