@@ -124,7 +124,7 @@ def delete_location(location_id: int) -> None:
 
     Raises:
         sqlite3.Error: If any database error occurs.
-        ValueError: if meal with meal_id can not be found or has been deleted
+        ValueError: if location with location_id can not be found or has been deleted
         TypeError: If any type error occurs
     """
     try:
@@ -151,7 +151,7 @@ def delete_location(location_id: int) -> None:
 
 def clear_locations() -> None:
     """
-    Recreates the meals table, effectively deleting all meals.
+    Recreates the locations table, effectively deleting all locations.
 
     Raises:
         sqlite3.Error: If any database error occurs.
@@ -201,10 +201,6 @@ def get_weather_for_location(location_id:int) -> None:
     except sqlite3.Error as e:
         logger.error("Database error: %s", str(e))
         raise e
-
-
-
-
     
 def get_location_by_id(location_id: int) -> None:
     """
