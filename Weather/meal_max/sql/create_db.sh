@@ -11,6 +11,6 @@ else
     echo "Creating database at $DB_PATH."
     # Create the database for the first time
     sqlite3 "$DB_PATH" < /app/sql/create_location_table.sql
-    sqlite3 "$DB_PATH" < /app/sql/create_location_table.sql
+    sqlite3 "$DB_PATH" < /app/sql/create_user_table.sql
     echo "Database created successfully."
 fi
