@@ -40,7 +40,7 @@ def healthcheck() -> Response:
 @app.route('/api/db-check', methods=['GET'])
 def db_check() -> Response:
     """
-    Route to check if the database connection and location table are functional.
+    Route to check if the database connection and location and users table are functional.
 
     Returns:
         JSON response indicating the database health status.
@@ -54,6 +54,9 @@ def db_check() -> Response:
         app.logger.info("Checking if locations table exists...")
         check_table_exists("locations")
         app.logger.info("locations table exists.")
+        app.logger.info("Checking if users table exists...")
+        check_table_exists("users")
+        app.logger.info("users table exists.")
         return make_response(jsonify({'database_status': 'healthy'}), 200)
     except Exception as e:
         return make_response(jsonify({'error': str(e)}), 404)
@@ -76,9 +79,9 @@ def create_location() -> Response:
         JSON response indicating the success of creating a location.
     Raises:
         400 error if input validation fails.
-        500 error if there is an issue updating the password.
+        500 error if there is an issue creating the location.
     """
-    app.logger.info('Creating new user')
+    app.logger.info('Creating location')
     try:
         # Get the JSON data from the request
         data = request.get_json()
@@ -211,7 +214,7 @@ def login() -> Response:
         app.logger.info('Attempting loging for: %s', username)
         if users.check_password(username, password):
             app.logger.info("Updated password for user: %s", username)
-            return make_response(jsonify({'status': 'success', 'message': 'Password updated successfully'}), 201)
+            return make_response(jsonify({'status': 'success', 'message': 'Login sucessful'}), 201)
         else:
             app.logger.info("Failed to login user: %s", username)
             return make_response(jsonify({'status': 'error', 'message': 'Incorrect Password'}), 401)
