@@ -11,6 +11,8 @@ from meal_max.utils.logger import configure_logger
 logger = logging.getLogger(__name__)
 configure_logger(logger)
 
+def get_id(self):
+    return str(self.id)
 
 class Users(db.Model):
     __tablename__ = 'users'
