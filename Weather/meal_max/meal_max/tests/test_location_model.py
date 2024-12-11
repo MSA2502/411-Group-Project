@@ -1,82 +1,113 @@
-import pytest
+import unittest
 from unittest.mock import patch, MagicMock
-from meal_max.models.location_model import Location, create_location, clear_locations, delete_location, get_weather_for_favorite_locations
+import sqlite3
+import requests
+from meal_max.models.location_model import (
+    create_location, 
+    clear_locations, 
+    delete_location, 
+    get_weather_for_favorite_location,
+    get_forecast_for_favorite_location,
+    get_location_by_id,
+    get_location_by_name
+)
 
-@pytest.fixture
-def sample_location():
-    """Fixture to provide a sample location object."""
-    return Location(id=1, location="Boston", favorite=True, current_weather="Sunny", forecasted_weather="Rainy")
+class TestLocationModel(unittest.TestCase):
 
-##################################################
-# Location Object Test Cases
-##################################################
+    def setUp(self):
+        """Setup mock database connection and environment variables."""
+        self.mock_conn = MagicMock()
+        self.mock_cursor = MagicMock()
+        self.mock_conn.cursor.return_value = self.mock_cursor
+        patcher = patch('meal_max.utils.sql_utils.get_db_connection', return_value=self.mock_conn)
+        self.addCleanup(patcher.stop)
+        self.mock_get_db_connection = patcher.start()
 
-def test_location_initialization(sample_location):
-    """Test initializing a Location object."""
-    assert sample_location.location == "Boston", "Expected location to be 'Boston'"
-    assert sample_location.favorite is True, "Expected favorite to be True"
-    assert sample_location.current_weather == "Sunny", "Expected current weather to be 'Sunny'"
-    assert sample_location.forecasted_weather == "Rainy", "Expected forecasted weather to be 'Rainy'"
+        patch_env = patch.dict('os.environ', {'api_key': 'mock_api_key'})
+        self.addCleanup(patch_env.stop)
+        patch_env.start()
 
-def test_location_type_validation():
-    """Test invalid type for location raises a ValueError."""
-    with pytest.raises(ValueError, match="location must be a string"):
-        Location(id=1, location=123, favorite=True, current_weather="Sunny", forecasted_weather="Rainy")
+    def tearDown(self):
+        """Cleanup after tests."""
+        self.mock_conn.reset_mock()
+        self.mock_cursor.reset_mock()
 
-##################################################
-# Database Interaction Test Cases
-##################################################
+    def test_create_location_valid(self):
+        """Test creating a valid location."""
+        create_location("New York", True, "Sunny", "Cloudy")
+        self.mock_cursor.execute.assert_called_once()
+        self.mock_conn.commit.assert_called_once()
 
-@patch("meal_max.utils.sql_utils.get_db_connection", return_value=MagicMock())
-def test_create_location(mock_get_db_connection):
-    """Test creating a location."""
-    mock_cursor = mock_get_db_connection.return_value.cursor.return_value
-    create_location("Boston")
-    mock_cursor.execute.assert_called_once_with(
-        """
-        INSERT INTO location ((location, favorite, current_weather, forecasted_weather))
-        VALUES (?, ?, ?, ?)
-        """,
-        ("Boston, True, Mist, Sunny"),
-    )
+    def test_create_location_invalid(self):
+        """Test creating a location with invalid data."""
+        with self.assertRaises(ValueError):
+            create_location(123, True, "Sunny", "Cloudy")
 
-@patch("meal_max.utils.sql_utils.get_db_connection", return_value=MagicMock())
-def test_clear_locations(mock_get_db_connection):
-    """Test clearing locations."""
-    mock_cursor = mock_get_db_connection.return_value.cursor.return_value
-    clear_locations()
-    mock_cursor.executescript.assert_called()
+    def test_clear_locations(self):
+        """Test clearing all locations."""
+        clear_locations()
+        self.mock_cursor.executescript.assert_called_once()
+        self.mock_conn.commit.assert_called_once()
 
-@patch("meal_max.utils.sql_utils.get_db_connection", return_value=MagicMock())
-def test_delete_location(mock_get_db_connection):
-    """Test deleting a location."""
-    mock_cursor = mock_get_db_connection.return_value.cursor.return_value
-    mock_cursor.fetchone.return_value = [False]
-    delete_location(1)
-    mock_cursor.execute.assert_called_with("UPDATE locations SET deleted = TRUE WHERE id = ?", (1,))
+    def test_delete_location_valid(self):
+        """Test deleting a valid location."""
+        self.mock_cursor.fetchone.return_value = [False]
+        delete_location(1)
+        self.mock_cursor.execute.assert_any_call("UPDATE location SET deleted = TRUE WHERE id = ?", (1,))
+        self.mock_conn.commit.assert_called_once()
 
-##################################################
-# Weather API Test Cases
-##################################################
+    def test_delete_location_not_found(self):
+        """Test deleting a location that does not exist."""
+        self.mock_cursor.fetchone.return_value = None
+        with self.assertRaises(ValueError):
+            delete_location(1)
 
-@patch("requests.get")
-def test_get_weather_for_favorite_locations(mock_requests_get):
-    """Test fetching weather for favorite locations."""
-    mock_requests_get.return_value.status_code = 200
-    mock_requests_get.return_value.json.return_value = {"weather": "Sunny"}
-    result = get_weather_for_favorite_locations("Boston")
-    mock_requests_get.assert_called_once()
-    assert result is not None, "Expected a response from the API"
+    @patch('requests.get')
+    def test_get_weather_for_favorite_location_valid(self, mock_get):
+        """Test fetching weather for a favorite location."""
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "main": {"temp": 20, "humidity": 50},
+            "wind": {"speed": 5},
+            "weather": [{"description": "clear sky"}]
+        }
+        mock_get.return_value = mock_response
 
-##################################################
-# Utility Function Test Cases
-##################################################
+        result = get_weather_for_favorite_location("New York")
+        self.assertEqual(result["temperature"], 20)
 
-@patch("meal_max.utils.sql_utils.get_db_connection", return_value=MagicMock())
-def test_view_all_favorites_with_current_weather(mock_get_db_connection):
-    """Test viewing all favorites with current weather."""
-    mock_cursor = mock_get_db_connection.return_value.cursor.return_value
-    view_all_favorites_with_current_weather()
-    mock_cursor.executescript.assert_called()
+    @patch('requests.get')
+    def test_get_weather_for_favorite_location_invalid(self, mock_get):
+        """Test fetching weather for an invalid location."""
+        mock_get.side_effect = requests.RequestException("Invalid API request")
+        with self.assertRaises(requests.RequestException):
+            get_weather_for_favorite_location("InvalidLocation")
 
-# Additional tests for forecast and favorites can follow a similar pattern.
+    def test_get_location_by_id_valid(self):
+        """Test fetching a location by valid ID."""
+        self.mock_cursor.fetchone.return_value = (1, "New York", True, "Sunny", "Cloudy", False)
+        location = get_location_by_id(1)
+        self.assertEqual(location.location, "New York")
+
+    def test_get_location_by_id_deleted(self):
+        """Test fetching a location that is marked as deleted."""
+        self.mock_cursor.fetchone.return_value = (1, "New York", True, "Sunny", "Cloudy", True)
+        with self.assertRaises(ValueError):
+            get_location_by_id(1)
+
+    def test_get_location_by_name_valid(self):
+        """Test fetching a location by valid name."""
+        self.mock_cursor.fetchone.return_value = (1, "New York", True, "Sunny", "Cloudy", False)
+        location = get_location_by_name("New York")
+        self.assertEqual(location.location, "New York")
+
+    def test_get_location_by_name_deleted(self):
+        """Test fetching a location by name when it is marked as deleted."""
+        self.mock_cursor.fetchone.return_value = (1, "New York", True, "Sunny", "Cloudy", True)
+        with self.assertRaises(ValueError):
+            get_location_by_name("New York")
+
+
+if __name__ == "__main__":
+    unittest.main()
