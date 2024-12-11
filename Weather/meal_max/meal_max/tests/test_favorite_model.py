@@ -12,20 +12,20 @@ def favorite_model():
 @pytest.fixture()
 def sample_location1():
     """Fixture to provide a sample Location object."""
-    return Location(1, "Location", True, "Sunny", "Rainy")
+    return Location(1, "Location 1", True, "Sunny", "Rainy")
 #ocation: str, favorite: bool, current_weather: str, forecasted_weather: str
 
 
 @pytest.fixture()
 def sample_location2():
     """Fixture to provide another sample Location object."""
-    return Location(id=2, location='Location 2')
+    return Location(2,'Location 2', True, "Snowing", "Tropical")
 
 
 @pytest.fixture()
 def sample_location3():
     """Fixture to provide another sample Location object."""
-    return Location(id=3, location='Location 3')
+    return Location(3,'Location 3', True, "Windy", "Chilly")
 
 
 ##################################################
