@@ -12,11 +12,7 @@ class FavoriteModel:
     A class to manage the list of favorite meals.
 
     Attributes:
-<<<<<<< HEAD
         favorites (List[Favorite]): The current list of favorite meals.
-=======
-        favorites (List[Meal]): The current list of favorite meals.
->>>>>>> ceeb2ed (moved favorite_model files to the right folder)
     """
 
     def __init__(self):
