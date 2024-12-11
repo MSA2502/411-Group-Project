@@ -35,7 +35,7 @@ class Location:
         """
         self.id = 1
 
-def create_location(self, location: str) -> dict:
+def create_location(location: str) -> dict:
     """
     Creates a location and fetches the weather for that location from the API.
 
@@ -50,7 +50,7 @@ def create_location(self, location: str) -> dict:
         raise ValueError(f"Invalid location: {location}. Location must be a string.")
 
     # Load API key and set base URLs
-    api_key = os.getenv(api_key)
+    api_key = os.getenv("api_key")
     if not api_key:
         raise ValueError("API key not found in environment variables.")
 
