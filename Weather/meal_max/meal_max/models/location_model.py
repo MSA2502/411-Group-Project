@@ -31,19 +31,13 @@ class Location:
 
     def __init__(self):
         """
-        Initializes the FavoriteModel with an empty favorites list.
+        Initializes the location model.
         """
         self.id = 1
 
-
-    #def __post_init__(self):
-        #if self.location != type(str):
-            #raise ValueError("location must be a string")
-
-
     def create_location(self, location: str) -> dict:
         """
-        Gets weather for a favorite location, including current and forecasted weather.
+        Creates a location and fetches the weather for that location from the API.
 
         Args:
             location (str): Name of the location to fetch weather for.
@@ -158,7 +152,7 @@ def delete_location(location_id: int) -> None:
 
 def get_weather_for_location(location_id:int) -> None:
     """
-    Gets weather for a favorite location, including current and forecasted weather.
+    Gets weather for a favorite location.
 
     Args:
         location (str): Name of the location to fetch weather for.
@@ -194,17 +188,17 @@ def get_weather_for_location(location_id:int) -> None:
     
 def get_location_by_id(location_id: int) -> None:
     """
-    Gets a meal by its id
+    Gets a location by its id
     
     Args:
-        meal_id(int): unique identifier of a meal object
+        location_id(int): unique identifier of a location object
     
     Returns:
         Location object
     
     Raises:
         sqlite3.Error: If any database error occurs.
-        ValueError: if meal with meal_id can not be found or has been deleted
+        ValueError: if location with location_id can not be found or has been deleted
     """
     try:
         with get_db_connection() as conn:
