@@ -50,7 +50,7 @@ def test_create_location(mock_db_connection, mock_requests):
     location = Location()
 
     # Call the function to test
-    result = location.create_location("Test City")
+    result = create_location("Test City")
 
     # Verify that the result is correct
     assert result['location'] == 'Test City'
