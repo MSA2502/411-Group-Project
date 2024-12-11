@@ -126,11 +126,7 @@ Route: /api/get-location-by-id/<int:location_id>
     ● Example Response:
         {
         "status": "success",
-        "location": 
-            {
-            "id": 0,
-            "location": "boston",
-            } 
+        "location": "Boston"
         }
 
 Route: /api/get-weather-for_location/<int:location>
@@ -145,10 +141,5 @@ Route: /api/get-weather-for_location/<int:location>
     ● Example Response:
         {
         "status": "success",
-        "location": 
-            {
-            "id": 0,
-            "location": "boston",
-            "current_weather": "(Mist (mist), Temp: 1.09\u00b0C, Humidity: 92%)"
-            } 
+        "weather": "(Mist (mist), Temp: 1.09\u00b0C, Humidity: 92%)"
         }
