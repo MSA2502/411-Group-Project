@@ -76,15 +76,20 @@ Route: /api/create_location
     ● Response Format: JSON
     ○ Success Response Example:
         ■ Code: 201
-        ■ Content: { "message": "Password updated successfully" }
+        ■ Content: { "status": "success", "location": location }
     ● Example Request:
         {
-        "location": "boston",
+        "location": "boston"
         }
     ● Example Response:
         {
-        "message": "Password updated successfully",
-        "status": "201"
+        "status": "success",
+        "location": 
+            {
+            "id": 0,
+            "location": "boston",
+            "current_weather": "(Mist (mist), Temp: 1.09\u00b0C, Humidity: 92%)"
+            } 
         }
 
 Route: /api/clear_locations
@@ -108,3 +113,33 @@ Route: /api/delete-location/<int:location_id>
         ■ Content: { "status": "success" }
     ● Example Response:
         { "status": "success" }
+
+Route: /api/get-location-by-id/<int:location_id>
+    ● Request Type: GET
+    ● Purpose: Route to get a location by its ID.
+    ● Response Format: JSON
+    ● Path Parameter: 
+        ○ location_id (int): the id of the location to get.
+    ○ Success Response Example:
+        ■ Code: 201
+        ■ Content: { "status": "success", "location": location }
+    ● Example Response:
+        {
+        "status": "success",
+        "location": "Boston"
+        }
+
+Route: /api/get-weather-for_location/<int:location>
+    ● Request Type: GET
+    ● Purpose: Route to get a the weather for a location
+    ● Response Format: JSON
+    ● Path Parameter: 
+        ○ location_id (int): the id of the location to get.
+    ○ Success Response Example:
+        ■ Code: 201
+        ■ Content: { "status": "success", "location": location }
+    ● Example Response:
+        {
+        "status": "success",
+        "weather": "(Mist (mist), Temp: 1.09\u00b0C, Humidity: 92%)"
+        }
