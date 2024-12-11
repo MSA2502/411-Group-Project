@@ -177,10 +177,10 @@ update_password() {
 check_health
 check_db
 
-# Clear the meals
+# Clear the locations
 clear_locations
 
-# Create songs
+# Create locations
 create_location "Boston"  
 create_location "Paris"  
 create_location "Rome" 
