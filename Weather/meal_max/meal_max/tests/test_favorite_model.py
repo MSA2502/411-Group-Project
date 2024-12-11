@@ -12,7 +12,8 @@ def favorite_model():
 @pytest.fixture()
 def sample_location1():
     """Fixture to provide a sample Location object."""
-    return Location(id=1, location='Location 1')
+    return Location(1, "Location", True, "Sunny", "Rainy")
+#ocation: str, favorite: bool, current_weather: str, forecasted_weather: str
 
 
 @pytest.fixture()

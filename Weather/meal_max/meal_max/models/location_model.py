@@ -32,9 +32,9 @@ class Location:
     forecasted_weather: str
 
 
-    def __post_init__(self):
-        if self.location != type(str):
-            raise ValueError("location must be a string ")
+    #def __post_init__(self):
+        #if self.location != type(str):
+            #raise ValueError("location must be a string")
 
 
 def create_location(location: str, favorite: bool, current_weather: str, forecasted_weather: str) -> None:
