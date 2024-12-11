@@ -79,7 +79,6 @@ class Location:
                 f"{current_data['weather'][0]['main']} ({current_data['weather'][0]['description']}), "
                 f"Temp: {current_data['main']['temp']}°C, Humidity: {current_data['main']['humidity']}% "
             )
-
             # Combine and write to JSON file
             weather_result = {
                 "id": self.id,
@@ -91,13 +90,18 @@ class Location:
                 with get_db_connection() as conn:
                     cursor = conn.cursor()
                     cursor.execute("""
-                        INSERT INTO locations(id, locations, weather)
-                        VALUES (?, ?, ?)
-                    """, (weather_result["id"], weather_result["location"], weather_result["current_weather"]))
+                        INSERT INTO locations(locations, weather)
+                        VALUES (?, ?)
+                    """, (weather_result["location"], weather_result["current_weather"]))
                     conn.commit()
-
+                    
+                    cursor = conn.cursor()
+                    cursor.execute("SELECT id FROM locations WHERE locations = '{location}';")
+                    tmp = cursor.fetchone()
+                    weather_result["id"]=tmp[0]
+                    
                     logger.info("Location successfully added to the database: %s", location)
-
+                    
             except sqlite3.IntegrityError:
                 logger.error("Duplicate location name: %s", location)
                 raise ValueError(f"Location with name '{location}' already exists")
