@@ -2,7 +2,16 @@ import pytest
 from unittest.mock import patch, MagicMock
 from meal_max.utils.sql_utils import get_db_connection
 from meal_max.utils.logger import configure_logger
-from meal_max.models import Location, delete_location, get_weather_for_location, get_location_by_id
+
+from meal_max.models.location_model import (
+    Location,
+    create_location,
+    clear_locations, 
+    delete_location, 
+    get_weather_for_location,
+    get_location_by_id
+    
+)
 import requests
 import sqlite3
 import json

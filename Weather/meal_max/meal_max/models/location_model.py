@@ -35,85 +35,85 @@ class Location:
         """
         self.id = 1
 
-    def create_location(self, location: str) -> dict:
-        """
-        Creates a location and fetches the weather for that location from the API.
+def create_location(self, location: str) -> dict:
+    """
+    Creates a location and fetches the weather for that location from the API.
 
-        Args:
-            location (str): Name of the location to fetch weather for.
+    Args:
+        location (str): Name of the location to fetch weather for.
 
-        Raises:
-            ValueError: If the location is invalid or not a string.
-            Exception: If the API call fails or data parsing encounters an error.
-        """
-        if not isinstance(location, str):
-            raise ValueError(f"Invalid location: {location}. Location must be a string.")
+    Raises:
+        ValueError: If the location is invalid or not a string.
+        Exception: If the API call fails or data parsing encounters an error.
+    """
+    if not isinstance(location, str):
+        raise ValueError(f"Invalid location: {location}. Location must be a string.")
 
-        # Load API key and set base URLs
-        api_key = os.getenv(api_key)
-        if not api_key:
-            raise ValueError("API key not found in environment variables.")
+    # Load API key and set base URLs
+    api_key = os.getenv(api_key)
+    if not api_key:
+        raise ValueError("API key not found in environment variables.")
 
-        weather_url = "https://api.openweathermap.org/data/2.5/weather"
+    weather_url = "https://api.openweathermap.org/data/2.5/weather"
 
-        params = {
-            "q": location,
-            "appid": api_key,
-            "units": "metric"  # Metric units for temperature in Celsius
+    params = {
+        "q": location,
+        "appid": api_key,
+        "units": "metric"  # Metric units for temperature in Celsius
+    }
+
+    try:
+        # Get current weather
+        current_response = requests.get(weather_url, params=params)
+        if current_response.status_code != 200:
+            raise Exception(f"Failed to fetch current weather: {current_response.status_code}, {current_response.text}")
+
+        current_data = current_response.json()
+        current_weather = (
+            f"{current_data['weather'][0]['main']} ({current_data['weather'][0]['description']}), "
+            f"Temp: {current_data['main']['temp']}°C, Humidity: {current_data['main']['humidity']}% "
+        )
+        # Combine and write to JSON file
+        weather_result = {
+            "id": -1,
+            "location": location,
+            "current_weather": current_weather
         }
 
         try:
-            # Get current weather
-            current_response = requests.get(weather_url, params=params)
-            if current_response.status_code != 200:
-                raise Exception(f"Failed to fetch current weather: {current_response.status_code}, {current_response.text}")
+            with get_db_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    INSERT INTO locations(locations, weather)
+                    VALUES (?, ?)
+                """, (weather_result["location"], weather_result["current_weather"]))
+                conn.commit()
+                
+                cursor = conn.cursor()
+                cursor.execute("SELECT id FROM locations WHERE locations = '{location}';")
+                tmp = cursor.fetchone()
+                weather_result["id"]=tmp[0]
+                
+                logger.info("Location successfully added to the database: %s", location)
+                
+        except sqlite3.IntegrityError:
+            logger.error("Duplicate location name: %s", location)
+            raise ValueError(f"Location with name '{location}' already exists")
 
-            current_data = current_response.json()
-            current_weather = (
-                f"{current_data['weather'][0]['main']} ({current_data['weather'][0]['description']}), "
-                f"Temp: {current_data['main']['temp']}°C, Humidity: {current_data['main']['humidity']}% "
-            )
-            # Combine and write to JSON file
-            weather_result = {
-                "id": self.id,
-                "location": location,
-                "current_weather": current_weather
-            }
+        except sqlite3.Error as e:
+            logger.error("Database error: %s", str(e))
+            raise e
 
-            try:
-                with get_db_connection() as conn:
-                    cursor = conn.cursor()
-                    cursor.execute("""
-                        INSERT INTO locations(locations, weather)
-                        VALUES (?, ?)
-                    """, (weather_result["location"], weather_result["current_weather"]))
-                    conn.commit()
-                    
-                    cursor = conn.cursor()
-                    cursor.execute("SELECT id FROM locations WHERE locations = '{location}';")
-                    tmp = cursor.fetchone()
-                    weather_result["id"]=tmp[0]
-                    
-                    logger.info("Location successfully added to the database: %s", location)
-                    
-            except sqlite3.IntegrityError:
-                logger.error("Duplicate location name: %s", location)
-                raise ValueError(f"Location with name '{location}' already exists")
+        with open("weather_data.json", "w") as json_file:
+            json.dump(weather_result, json_file, indent=4)
 
-            except sqlite3.Error as e:
-                logger.error("Database error: %s", str(e))
-                raise e
+        print("Weather data successfully written to 'weather_data.json'")
 
-            with open("weather_data.json", "w") as json_file:
-                json.dump(weather_result, json_file, indent=4)
+    except Exception as e:
+        print(f"An error occurred while fetching weather data: {e}")
+        raise
 
-            print("Weather data successfully written to 'weather_data.json'")
-
-        except Exception as e:
-            print(f"An error occurred while fetching weather data: {e}")
-            raise
-
-        return weather_result
+    return weather_result
 
 def delete_location(location_id: int) -> None:
     """
