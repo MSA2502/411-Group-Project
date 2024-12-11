@@ -1,6 +1,6 @@
 import pytest
 
-from meal_max.meal_max.models.user_model import Users
+from meal_max.models.user_models import Users
 
 
 @pytest.fixture
